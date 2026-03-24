@@ -137,7 +137,7 @@ pub fn TabContextMenu(
             }
 
             ContextMenuItem {
-                label: "Reveal in Finder",
+                label: crate::utils::platform::reveal_label(),
                 shortcut: shortcut("file.reveal_in_finder"),
                 icon: Some(IconName::Folder),
                 disabled: !has_file,

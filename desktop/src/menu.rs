@@ -200,7 +200,7 @@ fn add_file_menu(menu: &Menu) {
             &create_menu_item(MenuId::OpenDirectory, "Open Directory..."),
             &PredefinedMenuItem::separator(),
             &create_menu_item(MenuId::CopyFilePath, "Copy File Path"),
-            &create_menu_item(MenuId::RevealInFinder, "Reveal in Finder"),
+            &create_menu_item(MenuId::RevealInFinder, crate::utils::platform::reveal_label()),
             &PredefinedMenuItem::separator(),
             &create_menu_item(MenuId::CloseTab, "Close Tab"),
             &create_menu_item(MenuId::CloseAllTabs, "Close All Tabs"),

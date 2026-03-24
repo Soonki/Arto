@@ -254,7 +254,14 @@ fn parse_chord(token: &str) -> Result<KeyChord, ShortcutParseError> {
             "ctrl" | "control" => modifiers.insert(Modifiers::CONTROL),
             "shift" => modifiers.insert(Modifiers::SHIFT),
             "alt" | "option" => modifiers.insert(Modifiers::ALT),
-            "meta" | "cmd" | "command" => modifiers.insert(Modifiers::META),
+            "meta" | "cmd" | "command" => {
+                // On non-macOS platforms, Cmd/Meta maps to Ctrl so that
+                // preset shortcuts like "Cmd+n" match the physical Ctrl key.
+                #[cfg(target_os = "macos")]
+                modifiers.insert(Modifiers::META);
+                #[cfg(not(target_os = "macos"))]
+                modifiers.insert(Modifiers::CONTROL);
+            }
             _ => {
                 if key_part.is_some() {
                     return Err(ShortcutParseError::UnknownModifier(part.to_string()));
@@ -452,11 +459,16 @@ mod tests {
     #[test]
     fn parse_cmd_key() {
         let seq = ShortcutSequence::from_str("Cmd+n").unwrap();
+        // On macOS, Cmd maps to META; on other platforms, Cmd maps to CONTROL
+        #[cfg(target_os = "macos")]
+        let expected_modifier = Modifiers::META;
+        #[cfg(not(target_os = "macos"))]
+        let expected_modifier = Modifiers::CONTROL;
         assert_eq!(
             seq.chords,
             vec![KeyChord {
                 key: Key::Character("n".to_string()),
-                modifiers: Modifiers::META
+                modifiers: expected_modifier
             }]
         );
     }
@@ -482,11 +494,15 @@ mod tests {
     #[test]
     fn parse_symbol_alias() {
         let seq = ShortcutSequence::from_str("Cmd+Equal").unwrap();
+        #[cfg(target_os = "macos")]
+        let expected_modifier = Modifiers::META;
+        #[cfg(not(target_os = "macos"))]
+        let expected_modifier = Modifiers::CONTROL;
         assert_eq!(
             seq.chords,
             vec![KeyChord {
                 key: Key::Character("=".to_string()),
-                modifiers: Modifiers::META
+                modifiers: expected_modifier
             }]
         );
     }

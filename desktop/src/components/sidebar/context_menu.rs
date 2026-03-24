@@ -149,7 +149,7 @@ pub fn SidebarContextMenu(
             }
 
             ContextMenuItem {
-                label: "Reveal in Finder",
+                label: crate::utils::platform::reveal_label(),
                 shortcut: shortcut("file.reveal_in_finder"),
                 icon: Some(IconName::Folder),
                 on_click: move |_| on_reveal_in_finder.call(()),

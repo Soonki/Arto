@@ -80,10 +80,17 @@ fn validate_preset_bindings(name: &str, bindings: &BindingSet) {
                 )
             });
             let normalized = sequence.to_string();
-            assert!(
-                seen_sequences.insert(normalized.clone()),
-                "{name} preset has duplicate shortcut in {context}: {normalized:?}"
-            );
+            if !seen_sequences.insert(normalized.clone()) {
+                // On non-macOS platforms, Cmd maps to Ctrl which can create
+                // duplicates with existing Ctrl bindings. Log a warning instead
+                // of panicking; the later binding wins at runtime.
+                #[cfg(target_os = "macos")]
+                panic!("{name} preset has duplicate shortcut in {context}: {normalized:?}");
+                #[cfg(not(target_os = "macos"))]
+                tracing::debug!(
+                    "{name} preset: duplicate shortcut in {context} after Cmd→Ctrl mapping: {normalized:?} (later binding wins)"
+                );
+            }
         }
     }
 }

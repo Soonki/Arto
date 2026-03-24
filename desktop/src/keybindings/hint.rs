@@ -73,10 +73,30 @@ fn format_chord_hint(chord: &str) -> String {
     let mut out = String::new();
     for modifier in parts {
         match modifier.to_ascii_lowercase().as_str() {
-            "cmd" | "command" | "meta" => out.push('⌘'),
-            "ctrl" | "control" => out.push('⌃'),
-            "shift" => out.push('⇧'),
-            "alt" | "option" => out.push('⌥'),
+            "cmd" | "command" | "meta" => {
+                #[cfg(target_os = "macos")]
+                out.push('⌘');
+                #[cfg(not(target_os = "macos"))]
+                out.push_str("Ctrl+");
+            }
+            "ctrl" | "control" => {
+                #[cfg(target_os = "macos")]
+                out.push('⌃');
+                #[cfg(not(target_os = "macos"))]
+                out.push_str("Ctrl+");
+            }
+            "shift" => {
+                #[cfg(target_os = "macos")]
+                out.push('⇧');
+                #[cfg(not(target_os = "macos"))]
+                out.push_str("Shift+");
+            }
+            "alt" | "option" => {
+                #[cfg(target_os = "macos")]
+                out.push('⌥');
+                #[cfg(not(target_os = "macos"))]
+                out.push_str("Alt+");
+            }
             other => {
                 out.push_str(other);
                 out.push('+');
@@ -112,14 +132,25 @@ mod tests {
 
     #[test]
     fn format_shortcut_hint_uses_menu_style_symbols() {
-        assert_eq!(format_shortcut_hint("Cmd+Shift+o"), "⌘⇧O");
-        assert_eq!(format_shortcut_hint("Ctrl+w h"), "⌃W H");
+        #[cfg(target_os = "macos")]
+        {
+            assert_eq!(format_shortcut_hint("Cmd+Shift+o"), "⌘⇧O");
+            assert_eq!(format_shortcut_hint("Ctrl+w h"), "⌃W H");
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            assert_eq!(format_shortcut_hint("Cmd+Shift+o"), "Ctrl+Shift+O");
+            assert_eq!(format_shortcut_hint("Ctrl+w h"), "Ctrl+W H");
+        }
     }
 
     #[test]
     fn format_shortcut_hint_formats_arrow_keys() {
         assert_eq!(format_shortcut_hint("ArrowDown"), "↓");
+        #[cfg(target_os = "macos")]
         assert_eq!(format_shortcut_hint("Cmd+ArrowLeft"), "⌘←");
+        #[cfg(not(target_os = "macos"))]
+        assert_eq!(format_shortcut_hint("Cmd+ArrowLeft"), "Ctrl+←");
     }
 
     #[test]
