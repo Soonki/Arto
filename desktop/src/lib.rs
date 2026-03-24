@@ -51,6 +51,10 @@ pub fn run(invocation: cli::CliInvocation) -> RunResult {
     // Clear stale WebView cache when build changes (app upgrade via Homebrew, etc.)
     cache::clear_stale_webview_cache_if_needed();
 
+    // Record main thread ID for Windows IPC wake mechanism
+    #[cfg(target_os = "windows")]
+    ipc::set_main_thread_id();
+
     // Start IPC server to accept connections from future instances
     ipc::start_ipc_server();
 

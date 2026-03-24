@@ -54,6 +54,9 @@ core-graphics = "0.24"
 core-foundation = "0.10"
 tracing-oslog = "0.3.0"
 
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.62", features = ["Win32_UI_WindowsAndMessaging", "Win32_System_Threading"] }
+
 [dev-dependencies]
 tempfile = "3.15.0"
 

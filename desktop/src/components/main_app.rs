@@ -21,10 +21,20 @@ use std::path::PathBuf;
 /// This component only handles the initial event (first CLI path) for its own tab.
 #[component]
 pub fn MainApp() -> Element {
-    // Configure WindowCloseBehaviour::WindowHides for first window
+    // Configure window close behavior:
+    // - macOS: WindowHides (app stays in Dock, standard macOS behavior)
+    // - Windows/Linux: WindowCloses (app exits, relaunch creates fresh process)
     use_hook(|| {
-        tracing::debug!("Configuring main window with WindowHides behavior");
-        window().set_close_behavior(WindowCloseBehaviour::WindowHides);
+        #[cfg(target_os = "macos")]
+        {
+            tracing::debug!("Configuring main window with WindowHides behavior");
+            window().set_close_behavior(WindowCloseBehaviour::WindowHides);
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            tracing::debug!("Configuring main window with WindowCloses behavior");
+            window().set_close_behavior(WindowCloseBehaviour::WindowCloses);
+        }
 
         // Set chrome inset (window frame offset) - only first call takes effect
         let win = &window().window;

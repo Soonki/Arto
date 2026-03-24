@@ -83,9 +83,41 @@ fn wake_main_thread() {
     }
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "windows")]
+static MAIN_THREAD_ID: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+#[cfg(target_os = "windows")]
 fn wake_main_thread() {
-    // On non-macOS platforms, rely on custom_event_handler to run
+    // Post a WM_NULL message to the main thread to wake the Tao event loop.
+    // When windows are hidden (WindowCloseBehaviour::WindowHides), the event loop
+    // may be idle. PostThreadMessageW wakes it so MainEventsCleared fires and
+    // process_main_thread_tasks() picks up the queued IPC events.
+    let thread_id = MAIN_THREAD_ID.load(std::sync::atomic::Ordering::Relaxed);
+    if thread_id == 0 {
+        return;
+    }
+    unsafe {
+        use windows::Win32::Foundation::{LPARAM, WPARAM};
+        windows::Win32::UI::WindowsAndMessaging::PostThreadMessageW(
+            thread_id,
+            windows::Win32::UI::WindowsAndMessaging::WM_NULL,
+            WPARAM(0),
+            LPARAM(0),
+        )
+        .ok();
+    }
+}
+
+/// Record the main thread ID so IPC can wake the event loop on Windows.
+#[cfg(target_os = "windows")]
+pub fn set_main_thread_id() {
+    let id = unsafe { windows::Win32::System::Threading::GetCurrentThreadId() };
+    MAIN_THREAD_ID.store(id, std::sync::atomic::Ordering::Relaxed);
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn wake_main_thread() {
+    // On Linux/other platforms, rely on custom_event_handler to run
     // process_main_thread_tasks() on the next event loop iteration.
 }
 
